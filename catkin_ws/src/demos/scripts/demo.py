@@ -25,7 +25,9 @@ def apriltag_callback(data):
 		orientation = poselist[3:7]
 		angle = quaternion_to_euler_angle(orientation)
 		#print angle, "\n"
-		return angle
+		pose_result = [poselist[0], poselist[1], poselist[2], angle[0], angle[1], angle[2]]
+		#print pose_result
+		return pose_result
 	else:
 		print "Detect failed"
 		return ["Failed"]
