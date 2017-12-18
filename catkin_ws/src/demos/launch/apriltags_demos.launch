@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+	<!-- start basic args -->
+	<arg name="veh" default="sr300"/>
+	<arg name="config" default="baseline" />
+	<arg name="param_file_name" default="default" />
+	<arg name="apriltags_param_file_name" default="$(arg param_file_name)" />
+	<arg name="local" default="false"/>	
+	<!-- end basic args -->
+
+	<arg name="apriltags" default="true"/>
+
+	<!-- Start April Tags -->
+	<group if="$(arg apriltags)">
+		<!-- AprilTags Detections -->
+		<remap from="image_rect" to="/camera/rgb/image_rect_color" />
+		<remap from="compressed" to="/camera/rgb/image_rect_color/compressed" />
+		<remap from="camera_node/image/camera_info" to="/camera/rgb/camera_info" />
+		<include file="$(find apriltags_ros)/launch/apriltag_detector_node.launch">
+			<arg name="veh" value="$(arg veh)"/>
+		</include>
+	<!--End Apriltags -->
+	</group>
+</launch>

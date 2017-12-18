@@ -1,0 +1,15 @@
+<launch>
+    <arg name="pkg_name" value="apriltags_ros"/>
+    <arg name="node_name" default="apriltag_detector_node"/>
+    <arg name="veh" doc="Name of vehicle. ex: megaman"/>
+    <arg name="apriltag" default="true"/>
+
+    <group ns="$(arg veh)">
+        <node if="$(arg apriltag)" name="$(arg node_name)" pkg="$(arg pkg_name)" type="$(arg node_name)"
+              output="screen">
+            <rosparam command="load"
+                      file="$(find apriltags_ros)/param/default.yaml"/>
+            <rosparam param="tag_descriptions" command="load" file="$(find apriltags_ros)/param/tag_size.yaml"/>
+        </node>
+    </group>
+</launch>
