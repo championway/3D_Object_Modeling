@@ -8,6 +8,8 @@ import serial
 import tf.transformations as tfm
 import math
 from apriltags_ros.msg import AprilTagDetectionArray
+from demos.msg import pose
+
 
 rospy.init_node('pose_show', anonymous=True)
 def main():
@@ -17,6 +19,8 @@ def main():
 
 def apriltag_callback(data):
 	#return degree in radians
+        pose_result = pose()
+        apriltag_pub = rospy.Publisher("/pose_output", PoseList, queue_size=1)
 	if len(data.detections) >=1:
 		detection = data.detections[0]
 		#print detection.pose
@@ -25,12 +29,14 @@ def apriltag_callback(data):
 		orientation = poselist[3:7]
 		angle = quaternion_to_euler_angle(orientation)
 		#print angle, "\n"
-		pose_result = [poselist[0], poselist[1], poselist[2], angle[0], angle[1], angle[2]]
+		pose_result.PoseList = [poselist[0], poselist[1], poselist[2], angle[0], angle[1], angle[2]]
 		#print pose_result
-		return pose_result
+		apriltag_pub.publish(pose_result)
+                return pose_result
 	else:
 		print "Detect failed"
-		return ["Failed"]
+		apriltag_pub.publish([])
+                return ["Failed"]
 
 def posetoposelist(pose):
 	return [pose.position.x, pose.position.y, pose.position.z, pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w]
