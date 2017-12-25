@@ -206,3 +206,7 @@ include_directories(
 #=============== C++ ===============#
 add_executable(coordinate_transform src/coordinate_transform.cpp)
 target_link_libraries(coordinate_transform ${catkin_LIBRARIES})
+add_executable(coordinate_transform_test src/coordinate_transform_test.cpp)
+target_link_libraries(coordinate_transform_test ${catkin_LIBRARIES})
+add_executable(coordinate_transform_2 src/coordinate_transform_2.cpp)
+target_link_libraries(coordinate_transform_2 ${catkin_LIBRARIES})

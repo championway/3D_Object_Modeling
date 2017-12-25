@@ -1,0 +1,13 @@
+digraph G {
+"camera_link" -> "camera_rgb_frame"[label="Broadcaster: /camera/camera_nodelet_manager\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1514141691.317 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_rgb_frame" -> "camera_rgb_optical_frame"[label="Broadcaster: /camera/camera_nodelet_manager\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1514141691.317 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_link" -> "camera_depth_frame"[label="Broadcaster: /camera/camera_nodelet_manager\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1514141691.317 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_depth_frame" -> "camera_depth_optical_frame"[label="Broadcaster: /camera/camera_nodelet_manager\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1514141691.317 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_link" -> "camera_ir_frame"[label="Broadcaster: /camera/camera_nodelet_manager\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1514141691.317 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_ir_frame" -> "camera_ir_optical_frame"[label="Broadcaster: /camera/camera_nodelet_manager\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1514141691.317 sec old)\nBuffer length: 0.000 sec\n"];
+"camera_rgb_optical_frame" -> "viewed_tag_1"[label="Broadcaster: /sr300/apriltag_detector_node\nAverage rate: 5.133 Hz\nMost recent transform: 1514141690.933 ( 0.384 sec old)\nBuffer length: 4.676 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1514141691.317"[ shape=plaintext ] ;
+ }->"camera_link";
+}

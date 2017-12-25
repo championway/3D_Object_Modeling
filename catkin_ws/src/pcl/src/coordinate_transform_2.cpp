@@ -32,70 +32,45 @@ pcl::PointCloud<pcl::PointXYZRGB> tt;
 
 void  cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 {
-	 // Create a container for the data.
-
-
-	// Do data processing here...
-	
-	pcl::fromROSMsg (*input, pcl_orig);//convert from PointCloud2 to pcl
-
-
-  
-  pcl::fromROSMsg (*input, tt);
-  //std::cout << hold.header.frame_id << endl << endl;
-  sensor_msgs::convertPointCloud2ToPointCloud(*input, hold);
-  //string a = hold.header.frame_id;
-  //std::cout << "hold:  " << hold.header.frame_id << std::endl;
-  output1 = *input;
-
-}
-
-void  tag_cb (const geometry_msgs::PoseArray tag)
-{
   tf::TransformListener lr;
   tf::TransformBroadcaster br;
   tf::StampedTransform trans;
-  tf::Transform transform;
-  if (tag.poses[0].position.x != 0)
-  {
-  for(int i = 0; i < sizeof(tag); i++)
-  {
-    std::cout << tag.poses[0].position.x;
-    try{
-    //lr.transformPointCloud("viewed_tag_1", hold , tf_ros1);
-      
-      std::cout << tag.poses[i].position.x <<"=="<< tag.poses[i].position.y <<"=="<< tag.poses[i].position.z;
-
-      //transform.setOrigin(tf::Vector3(tag.poses[i].position.x, tag.poses[i].position.y, tag.poses[i].position.z) );
-      //transform.setRotation( tf::Quaternion(tag.poses[i].orientation.x, tag.poses[i].orientation.y, tag.poses[i].orientation.z, tag.poses[i].orientation.w) );
-      br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), hold.header.frame_id, "tag1"));
-      lr.waitForTransform("tag1", hold.header.frame_id, ros::Time(0), ros::Duration(10.0) );
-      lr.lookupTransform("tag1", hold.header.frame_id, ros::Time(0), trans);
-      pcl_ros::transformPointCloud("ttt", trans, output1, tf_ros2);
+	pcl::fromROSMsg (*input, pcl_orig);//convert from PointCloud2 to pcl
+  pcl::fromROSMsg (*input, tt);
+  sensor_msgs::convertPointCloud2ToPointCloud(*input, hold);
+  output1 = *input;
+  //tf::Stamped<tf::Transform> transform;
+  //transform.setOrigin( tf::Vector3(0.0, 2.0, 0.0) );
+  //transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+  //br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), output1.header.frame_id, "aa"));
+  try{
+      lr.waitForTransform("viewed_tag_1", output1.header.frame_id, ros::Time(0), ros::Duration(10.0) );
+      //lr.lookupTransform("viewed_tag_1", output1.header.frame_id, ros::Time(0), trans);
+      //pcl_ros::transformPointCloud("viewed_tag_1", trans, output1, tf_ros2);
+      pcl_ros::transformPointCloud("aa", *input, tf_ros2, lr);
     }
     catch( tf::TransformException ex)
     {
-        ROS_ERROR("transfrom exception : %s",ex.what());
-    }
-    
-    std::cout << "tros:  " <<  tf_ros1.header.frame_id << std::endl;
-    sensor_msgs::convertPointCloudToPointCloud2(tf_ros1, tf_ros);
-
-    pcl::PointCloud<pcl::PointXYZRGB> tf_pcl;
-    pcl::fromROSMsg (tf_ros, tf_pcl);//convert from PointCloud2 to pcl_rgb
-
-    pcl::toROSMsg(pcl_orig, pcl_to_ros_pointcloud2);//convert back to PointCloud2
-    //publish to topics
-    //std::cout << "eeee";
-    pub_tf.publish (tf_ros);
-    pointcloudXYZ.publish(pcl_orig);
-    point_tf.publish(tf_pcl);
-    point_orig.publish(tt);
-    pointcloud2_publisher.publish(pcl_to_ros_pointcloud2);
-    ROS_INFO("Success output");//cout   
+      ROS_ERROR("transfrom exception : %s",ex.what());
   }
+  
+  //std::cout << "tros:  " <<  output1.header.frame_id << std::endl;
+  //sensor_msgs::convertPointCloudToPointCloud2(tf_ros1, tf_ros);
+
+  pcl::PointCloud<pcl::PointXYZRGB> tf_pcl;
+  pcl::fromROSMsg (tf_ros2, tf_pcl);//convert from PointCloud2 to pcl_rgb
+
+  pcl::toROSMsg(pcl_orig, pcl_to_ros_pointcloud2);//convert back to PointCloud2
+  //publish to topics
+  //std::cout << "eeee";
+  pub_tf.publish (tf_ros2);
+  pointcloudXYZ.publish(pcl_orig);
+  point_tf.publish(tf_pcl);
+  point_orig.publish(tt);
+  pointcloud2_publisher.publish(pcl_to_ros_pointcloud2);
+  ROS_INFO("Success output");//cout   
 }
-}
+
 
 int   main (int argc, char** argv)
 {
@@ -104,7 +79,6 @@ int   main (int argc, char** argv)
      ros::NodeHandle nh;  
      // Create a ROS subscriber for the input point cloud
      ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/camera/depth_registered/points", 1, cloud_cb);
-     ros::Subscriber apriltags = nh.subscribe<geometry_msgs::PoseArray>("/sr300/tag_detections_pose", 1, tag_cb);
      // Create a ROS publisher for the output point cloud
      pub_tf = nh.advertise<sensor_msgs::PointCloud2> ("tf_ros", 1); 
      pointcloudXYZ = nh.advertise<PointCloudXYZ> ("ros_pointcloudxyz", 1);
