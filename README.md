@@ -23,7 +23,7 @@ $ source environment.sh
 $ source set_ros_master.sh
 ```
 Note:
-Do it everytime as you execute any file
+Do it everytime as you open new terminals
 
 
 ### Open Camera
