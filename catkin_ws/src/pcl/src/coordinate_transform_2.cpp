@@ -17,7 +17,7 @@
 ros::Publisher tf_pcl_publisher;
 ros::Publisher tf_ros_publisher;
 ros::Publisher orig_ros_publisher;
-
+tf::TransformListener* lr;
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloudXYZ;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudRGB;
 
@@ -26,24 +26,22 @@ void  cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   sensor_msgs::PointCloud2 tf_ros;
   sensor_msgs::PointCloud2 orig_ros;
   pcl::PointCloud<pcl::PointXYZRGB> tf_pcl;  
-  tf::TransformListener lr;
   tf::TransformBroadcaster br;
   tf::StampedTransform trans;
   orig_ros = *input;
-  //tf::Stamped<tf::Transform> transform;
-  //transform.setOrigin( tf::Vector3(0.0, 2.0, 0.0) );
-  //transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
-  //br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), output1.header.frame_id, "aa"));
-  try{
-      lr.waitForTransform("/camera_link", orig_ros.header.frame_id, ros::Time(0), ros::Duration(10.0) );
-      //lr.lookupTransform("viewed_tag_1", output1.header.frame_id, ros::Time(0), trans);
-      //pcl_ros::transformPointCloud("viewed_tag_1", trans, output1, tf_ros);
-      pcl_ros::transformPointCloud("/camera_link", *input, tf_ros, lr);
-    }
-    catch( tf::TransformException ex)
-    {
-      ROS_ERROR("transfrom exception : %s",ex.what());
-  }
+  /*transform.setOrigin( tf::Vector3(0.0, 2.0, 0.0) );u
+  transform.setRotation( tf::Quaternion(0, 0, 0, 1) );
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), output1.header.frame_id, "aa"));*/
+  //try{
+      lr->waitForTransform("/viewed_tag_1", input->header.frame_id, ros::Time::now(), ros::Duration(10.0) );
+      //lr.lookupTransform("viewed_tag_1", orig_ros.header.frame_id, ros::Time(0), trans);
+      //pcl_ros::transformPointCloud("viewed_tag_1", trans, orig_ros, tf_ros);
+      pcl_ros::transformPointCloud("/viewed_tag_1", *input, tf_ros, *lr);
+    //}
+    //catch( tf::TransformException ex)
+    //{
+   //   ROS_ERROR("transfrom exception : %s",ex.what());
+  //}
 
   pcl::fromROSMsg (tf_ros, tf_pcl);//convert from PointCloud2 to pcl_rgb
   //publish to topics
@@ -60,6 +58,8 @@ int   main (int argc, char** argv)
      std::cout << "START TO TRANSFORM";
      ros::init (argc, argv, "my_pcl_tutorial");
      ros::NodeHandle nh;  
+     tf::TransformListener listener(ros::Duration(10));
+     lr = &listener;
      // Create a ROS subscriber for the input point cloud
      ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/camera/depth_registered/points", 1, cloud_cb);
      // Create a ROS publisher for the output point cloud
