@@ -41,7 +41,7 @@ $ roslaunch demos apriltags_demos.launch
 ### Save PCD files
 
 ```
-$ rosrun pcd create_pcd input:= [pcl_topic]
+$ rosrun pcd create_pcd input:=[pcl_topic] _prefix:=[file_name]
 ```
 
 ### View The PointCloud in PCL_viewer

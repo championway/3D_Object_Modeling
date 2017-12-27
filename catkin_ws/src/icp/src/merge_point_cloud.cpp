@@ -14,6 +14,7 @@
 #include <pcl/search/organized.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/impl/point_types.hpp>
+#include <pcl/filters/filter.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <image_transport/image_transport.h>
 
@@ -43,19 +44,26 @@ void  cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input_point2)
   {
     pcl::fromROSMsg ( *input_point2, *result);
     pcl::fromROSMsg ( *input_point2, *cloud_out);
+    std::vector<int> a;
+    pcl::removeNaNFromPointCloud(*result, *result, a);
+    std::vector<int> b;
+    pcl::removeNaNFromPointCloud(*cloud_out, *cloud_out, b);
     first = false;
   }
 
   pcl::fromROSMsg ( *input_point2, *cloud_in);
 
-  /*icp.setInputSource(cloud_in);
+  std::vector<int> indices;
+  pcl::removeNaNFromPointCloud(*cloud_in, *cloud_in, indices);
+
+  icp.setInputSource(cloud_in);
   icp.setInputTarget(cloud_out);
     
   icp.align( *icp_out);
 
 
   std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
-  std::cout << icp.getFinalTransformation() << std::endl;*/
+  std::cout << icp.getFinalTransformation() << std::endl;
   
   *result += *icp_out;
 

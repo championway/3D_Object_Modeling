@@ -6,3 +6,4 @@ catkin_ws/src/duckietown/machines
 .idea/
 *.swp
 *.swo
+*.pcd

@@ -204,3 +204,5 @@ include_directories(
 # catkin_add_nosetests(test)
 add_executable(create_pcd src/create_pcd.cpp)
 target_link_libraries(create_pcd ${catkin_LIBRARIES})
+add_executable(remove_nan src/remove_nan.cpp)
+target_link_libraries(remove_nan ${catkin_LIBRARIES})
