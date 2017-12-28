@@ -11,6 +11,8 @@
 #include <pcl/common/common.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/io/ply_io.h>
+#include <pcl/io/io.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/search/organized.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/impl/point_types.hpp>
@@ -29,10 +31,12 @@ using namespace pcl;
 
 // declare point cloud
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudXYZRGB;
+typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudXYZRGBA;
 PointCloudXYZRGB::Ptr cloud_in (new PointCloudXYZRGB);
 PointCloudXYZRGB::Ptr cloud_out(new PointCloudXYZRGB);
 PointCloudXYZRGB::Ptr icp_out (new PointCloudXYZRGB); 
-PointCloudXYZRGB::Ptr result (new PointCloudXYZRGB); 
+PointCloudXYZRGB::Ptr result (new PointCloudXYZRGB);
+PointCloudXYZRGBA::Ptr rgba (new PointCloudXYZRGBA); 
 
 void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
 {
@@ -56,26 +60,31 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*cloud_in, *cloud_in, indices);
 
-  /*icp.setInputSource(cloud_in);
+  icp.setInputSource(cloud_in);
   icp.setInputTarget(cloud_out);
     
   icp.align( *icp_out);
 
-  std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;*/
+  std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
   //std::cout << icp.getFinalTransformation() << std::endl;
   
-  *result += *cloud_in;
+  *result += *icp_out;
 
   cloud_in->header.frame_id = "camera_rgb_optical_frame";
   cloud_out->header.frame_id = "camera_rgb_optical_frame";
   icp_out->header.frame_id = "camera_rgb_optical_frame";
   result->header.frame_id = "camera_rgb_optical_frame";
-
+  copyPointCloud (*result, *rgba);
   // publish point cloud
-  input_publisher.publish(cloud_in);
-  output_publisher.publish(cloud_out);
-  icp_publisher.publish(icp_out);
-  result_publisher.publish(result);
+  //input_publisher.publish(cloud_in);
+  //output_publisher.publish(cloud_out);
+  //icp_publisher.publish(icp_out);
+  //result_publisher.publish(result);
+  int vec1 = pcl::io::savePCDFile ("savePCDFile.pcd", *result);
+  int vec2 = pcl::io::savePCDFileASCII ("savePCDFileASCII.pcd", *result);
+  int vec3 = pcl::io::savePLYFile ("savePLYFile.ply", *result);
+  int vec4 = pcl::io::savePCDFile ("rgbaPCD.pcd", *rgba);
+  int vec5 = pcl::io::savePCDFileASCII ("rgbaASCII.pcd", *rgba);
   ROS_INFO("Success output");//cout
 }
 
