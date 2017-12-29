@@ -19,6 +19,7 @@
 #include <pcl/filters/filter.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <image_transport/image_transport.h>
+#include <limits>
 
 ros::Publisher input_publisher;
 ros::Publisher output_publisher;
@@ -38,6 +39,17 @@ PointCloudXYZRGB::Ptr icp_out (new PointCloudXYZRGB);
 PointCloudXYZRGB::Ptr result (new PointCloudXYZRGB);
 PointCloudXYZRGBA::Ptr rgba (new PointCloudXYZRGBA); 
 
+void  remove_floor(PointCloudXYZRGB::Ptr& origin)
+{
+  for(size_t i=0; i < origin->points.size();i++)
+  {
+    if(origin->points[i].z < 0.02)
+    {
+      origin->points[i].z = std::numeric_limits<float>::quiet_NaN();
+    }
+  }
+}
+
 void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
 {
   // declare icp
@@ -48,6 +60,8 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
   {
     copyPointCloud (*input_pcl, *result);
     copyPointCloud (*input_pcl, *cloud_out);
+    remove_floor (result);
+    remove_floor (cloud_out);
     std::vector<int> a;
     pcl::removeNaNFromPointCloud(*result, *result, a);
     std::vector<int> b;
@@ -56,6 +70,7 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
   }
 
   copyPointCloud (*input_pcl, *cloud_in);
+  remove_floor(cloud_in);
 
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*cloud_in, *cloud_in, indices);

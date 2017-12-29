@@ -40,9 +40,11 @@ PointCloudXYZRGBA::Ptr rgba (new PointCloudXYZRGBA);
 
 void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
 {
+  std::cout<< "recieve data" << std::endl;
   // declare icp
   pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
-  
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree1 (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree2 (new pcl::search::KdTree<pcl::PointXYZRGB>);
   // convert from PointCloud2 to pcl_rgb
   if(first)
   {
@@ -60,32 +62,40 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*cloud_in, *cloud_in, indices);
 
-  /*icp.setInputSource(cloud_in);
+  std::cout<< "start caculate icp" << std::endl;
+
+  tree1->setInputCloud(cloud_in); 
+  tree2->setInputCloud(cloud_out); 
+  icp.setInputSource(cloud_in);
   icp.setInputTarget(cloud_out);
-    
+  icp.setMaxCorrespondenceDistance(1500);
+  icp.setTransformationEpsilon(1e-10);
+  icp.setEuclideanFitnessEpsilon(0.001);
+  icp.setMaximumIterations(10); 
   icp.align( *icp_out);
 
-  std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;*/
+  std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
   //std::cout << icp.getFinalTransformation() << std::endl;
-  
-  *result += *cloud_in;
+  if (icp.getFitnessScore()<0.0001)
+  {
+  *result += *icp_out;
 
   cloud_in->header.frame_id = "camera_rgb_optical_frame";
   cloud_out->header.frame_id = "camera_rgb_optical_frame";
   icp_out->header.frame_id = "camera_rgb_optical_frame";
   result->header.frame_id = "camera_rgb_optical_frame";
   copyPointCloud (*result, *rgba);
-  // publish point cloud
-  //input_publisher.publish(cloud_in);
-  //output_publisher.publish(cloud_out);
-  //icp_publisher.publish(icp_out);
-  //result_publisher.publish(result);
+
   //int vec1 = pcl::io::savePCDFile ("savePCDFile.pcd", *result);
   //int vec2 = pcl::io::savePCDFileASCII ("savePCDFileASCII.pcd", *result);
   //int vec3 = pcl::io::savePLYFile ("savePLYFile.ply", *result);
-  int vec4 = pcl::io::savePCDFile ("rgbaPCD.pcd", *rgba);
+  int vec4 = pcl::io::savePCDFile ("1500_0.001_10_kdtree.pcd", *rgba);
   //int vec5 = pcl::io::savePCDFileASCII ("rgbaASCII.pcd", *rgba);
-  ROS_INFO("Success output");//cout
+  std::cout << "Success output" << std::endl;//cout
+  std::cout << "=====================" << std::endl << std::endl;//cout
+  }
+  else{std::cout<<"SKIP"<<std::endl;}
+  std::cout << "=====================" << std::endl << std::endl;//cout
 }
 
 int   main (int argc, char** argv)
