@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   roscpp
   rospy
+  apriltags_ros
   pcl_ros
   sensor_msgs
   std_msgs
@@ -212,3 +213,7 @@ add_executable(pcl_transform src/pcl_transform.cpp)
 target_link_libraries(pcl_transform ${catkin_LIBRARIES})
 add_executable(merge src/merge.cpp)
 target_link_libraries(merge ${catkin_LIBRARIES})
+add_executable(remove_nan src/remove_nan.cpp)
+target_link_libraries(remove_nan ${catkin_LIBRARIES})
+add_executable(multi_tag src/multi_tag.cpp)
+target_link_libraries(multi_tag ${catkin_LIBRARIES})

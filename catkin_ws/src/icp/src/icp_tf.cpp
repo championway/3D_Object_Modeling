@@ -33,7 +33,6 @@ using namespace pcl;
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudXYZRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudXYZRGBA;
 PointCloudXYZRGB::Ptr cloud_in (new PointCloudXYZRGB);
-PointCloudXYZRGB::Ptr cloud_out(new PointCloudXYZRGB);
 PointCloudXYZRGB::Ptr icp_out (new PointCloudXYZRGB); 
 PointCloudXYZRGB::Ptr result (new PointCloudXYZRGB);
 PointCloudXYZRGBA::Ptr rgba (new PointCloudXYZRGBA); 
@@ -49,11 +48,8 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
   if(first)
   {
     copyPointCloud (*input_pcl, *result);
-    copyPointCloud (*input_pcl, *cloud_out);
     std::vector<int> a;
     pcl::removeNaNFromPointCloud(*result, *result, a);
-    std::vector<int> b;
-    pcl::removeNaNFromPointCloud(*cloud_out, *cloud_out, b);
     first = false;
   }
   else
@@ -77,21 +73,16 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
 
     std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
     //std::cout << icp.getFinalTransformation() << std::endl;
-    if (icp.getFitnessScore()<0.00005)
+    if (icp.getFitnessScore()<0.00004)
     {
     *result += *icp_out;
 
     cloud_in->header.frame_id = "camera_rgb_optical_frame";
-    cloud_out->header.frame_id = "camera_rgb_optical_frame";
     icp_out->header.frame_id = "camera_rgb_optical_frame";
     result->header.frame_id = "camera_rgb_optical_frame";
     copyPointCloud (*result, *rgba);
 
-    //int vec1 = pcl::io::savePCDFile ("savePCDFile.pcd", *result);
-    //int vec2 = pcl::io::savePCDFileASCII ("savePCDFileASCII.pcd", *result);
-    //int vec3 = pcl::io::savePLYFile ("savePLYFile.ply", *result);
     int vec4 = pcl::io::savePCDFile ("result.pcd", *rgba);
-    //int vec5 = pcl::io::savePCDFileASCII ("rgbaASCII.pcd", *rgba);
     std::cout << "Success output" << std::endl;//cout
     std::cout << "=====================" << std::endl << std::endl;//cout
     }
