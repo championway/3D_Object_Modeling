@@ -6,7 +6,7 @@
 	<arg name="param_file_name" default="default" />
 	<arg name="apriltags_param_file_name" default="$(arg param_file_name)" />
 	<arg name="local" default="false"/>	
-	<arg name="id" default="true"/>
+	<arg name="tf_pub" default="true"/>
 	<!-- end basic args -->
 
 	<arg name="apriltags" default="true"/>
@@ -23,7 +23,7 @@
 	<!--End Apriltags -->
 	</group>
 
-    <group if="$(arg id)" >
-        <node name="apriltags_ros" pkg="apriltags_ros" type="convert_id_int.py" output="screen"> </node>
+    <group if="$(arg tf_pub)" >
+        <node name="apriltags_ros" pkg="apriltags_ros" type="pub_tf.py" output="screen"> </node>
     </group>
 </launch>

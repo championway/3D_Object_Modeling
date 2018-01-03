@@ -68,7 +68,7 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
     icp.setMaxCorrespondenceDistance(1500);
     icp.setTransformationEpsilon(1e-10);
     icp.setEuclideanFitnessEpsilon(0.001);
-    icp.setMaximumIterations(100); 
+    icp.setMaximumIterations(50); 
     icp.align( *icp_out);
 
     std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
