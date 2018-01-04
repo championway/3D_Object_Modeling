@@ -4,7 +4,13 @@
 project(isam)
 
 cmake_minimum_required (VERSION 2.8.3)
-find_package(catkin REQUIRED COMPONENTS cmake_modules)
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  pcl_ros
+  apriltags_ros
+  geometry_msgs
+  cmake_modules
+)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -82,3 +88,7 @@ add_subdirectory(misc)
  add_executable(isam_covariances ${PROJECT_SOURCE_DIR}/examples/covariances.cpp)
  add_dependencies(isam_covariances ${catkin_EXPORTED_TARGETS})
  target_link_libraries(isam_covariances ${catkin_LIBRARIES} ${isam_LIBRARIES})
+
+ add_executable(apriltags_isam ${PROJECT_SOURCE_DIR}/examples/apriltags_isam.cpp)
+ add_dependencies(apriltags_isam ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(apriltags_isam ${catkin_LIBRARIES} ${isam_LIBRARIES})
