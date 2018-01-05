@@ -92,3 +92,7 @@ add_subdirectory(misc)
  add_executable(apriltags_isam ${PROJECT_SOURCE_DIR}/examples/apriltags_isam.cpp)
  add_dependencies(apriltags_isam ${catkin_EXPORTED_TARGETS})
  target_link_libraries(apriltags_isam ${catkin_LIBRARIES} ${isam_LIBRARIES})
+
+ add_executable(test ${PROJECT_SOURCE_DIR}/examples/test.cpp)
+ add_dependencies(test ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(test ${catkin_LIBRARIES} ${isam_LIBRARIES})
