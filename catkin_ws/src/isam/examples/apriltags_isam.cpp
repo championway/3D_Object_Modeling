@@ -1,13 +1,16 @@
 #include <isam/isam.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Quaternion.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <tf/transform_broadcaster.h>
 #include <apriltags_ros/AprilTagDetectionArray.h>
 using namespace std;
 using namespace isam;
 using namespace Eigen;
 ros::Publisher tf_ros_publisher;
-
+tf::TransformBroadcaster* br;
+tf::Stamped<tf::Transform>* tag_transform;
+geometry_msgs::PoseStamped* tag_pose;
 void toEulerAngle(const geometry_msgs::Quaternion q, double& roll, double& pitch, double& yaw)
 {
   // roll (x-axis rotation)
@@ -39,7 +42,7 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     vector<Pose3d_Node*> pose_nodes;  // locally remember poses
     Pose3d tag0, tag1;
     Noise noise3 = Information(100. * eye(7));
-    Noise noise2 = Information(100. * eye(7));
+    Noise noise2 = Information(10. * eye(7));
 
     for(int i = 0; i < tag_length; i++)
     {
@@ -75,7 +78,7 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     slam.add_factor(camera_tag1);
     //=================================================
     Pose3d fixed(-0.166, 0.248, 0, 0, 0, 0);
-    Pose3d_Pose3d_Factor* fixex_factor = new Pose3d_Pose3d_Factor(pose_nodes[0], pose_nodes[1], fixed, noise2);
+    Pose3d_Pose3d_Factor* fixex_factor = new Pose3d_Pose3d_Factor(pose_nodes[2], pose_nodes[1], fixed, noise3);
     slam.add_factor(fixex_factor);
     //=================================================
 
@@ -86,25 +89,31 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     slam.batch_optimization();
 
     // accessing the current estimate of a specific pose
-    cout << pose_nodes[0]->value() << endl << endl << endl;
-    tf::Transform transform;
-    tf::Quaternion q;
-    tf::TransformBroadcaster br;
-    cout << "1"<<endl;
-    transform.setOrigin(tf::Vector3(0,2,1));
-    cout << "2"<<endl;
-    q.setRPY(0, 0, 1);
-    cout << "3"<<endl;
-    transform.setRotation(q);
-    cout << "4"<<endl;
-    br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/isam_tf", "/camera_rgb_optical_frame"));
+    cout << pose_nodes[0]-> value() << endl;
+    //tf::Transform transform;
+    //tf::Quaternion q;
+    //transform.setOrigin(tf::Vector3(input->detections[0].pose.pose.position.x, input->detections[0].pose.pose.position.y, input->detections[0].pose.pose.position.z));
+    //q.setRPY(input->detections[0].pose.pose.orientation.x, input->detections[0].pose.pose.orientation.y, input->detections[0].pose.pose.orientation.z);
+    tag_transform = new tf::Stamped<tf::Transform>;
+    tag_pose = new geometry_msgs::PoseStamped;
+    tag_pose->pose.position.x = pose_nodes[0]-> value().x();
+    tag_pose->pose.position.y = pose_nodes[0]-> value().y();
+    tag_pose->pose.position.z = pose_nodes[0]-> value().z();
+    tag_pose->pose.orientation.x = pose_nodes[0]-> value().yaw();
+    tag_pose->pose.orientation.y = pose_nodes[0]-> value().pitch();
+    tag_pose->pose.orientation.z = pose_nodes[0]-> value().roll();
+    tag_pose->pose.orientation.w = input->detections[0].pose.pose.orientation.w;
+    tf::poseStampedMsgToTF(*tag_pose, *tag_transform);
+    //transform.setRotation(q);
+    br = new tf::TransformBroadcaster();
+    br->sendTransform(tf::StampedTransform(*tag_transform, ros::Time::now(), input->detections[0].pose.header.frame_id, "/isam_tf"));
     // printing the complete graph
     //cout << endl << "Full graph:" << endl;
     //slam.write(cout);
     
     //publish to topics
     //tf_ros_publisher.publish(tf_pcl);
-    ROS_INFO("Success output");
+    cout << "Success output" << endl << endl;
   }
   
 }
