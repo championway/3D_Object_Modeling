@@ -11,80 +11,106 @@
 #include <pcl/common/common.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/io/ply_io.h>
+#include <pcl/io/io.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/search/organized.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/impl/point_types.hpp>
+#include <pcl/filters/filter.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <image_transport/image_transport.h>
-ros::Publisher tf_pcl_publisher;
-ros::Publisher tf_ros_publisher;
-ros::Publisher orig_ros_publisher;
-using namespace pcl;
-typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudXYZRGB;
 
+ros::Publisher input_publisher;
+ros::Publisher output_publisher;
+ros::Publisher icp_publisher;
+ros::Publisher result_publisher;
+
+bool first = true;
+
+using namespace pcl;
+std::string file_name;
+// declare point cloud
+typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudXYZRGB;
+typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudXYZRGBA;
+PointCloudXYZRGB::Ptr cloud_in (new PointCloudXYZRGB);
+PointCloudXYZRGB::Ptr icp_out (new PointCloudXYZRGB); 
+PointCloudXYZRGB::Ptr result (new PointCloudXYZRGB);
+PointCloudXYZRGB::Ptr input_pcl (new PointCloudXYZRGB); 
+PointCloudXYZRGBA::Ptr rgba (new PointCloudXYZRGBA);
+
+void  cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
+{
+  std::cout<< "recieve data" << std::endl;
+  // declare icp
+  pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree1 (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree2 (new pcl::search::KdTree<pcl::PointXYZRGB>);
+  pcl::fromROSMsg (*input, *input_pcl);// convert from PointCloud2 to pcl_rgb
+  if(first)
+  {
+    copyPointCloud (*input_pcl, *result);
+    std::vector<int> a;
+    pcl::removeNaNFromPointCloud(*result, *result, a);
+    first = false;
+  }
+  else
+  {
+    copyPointCloud (*input_pcl, *cloud_in);
+
+    std::vector<int> indices;
+    pcl::removeNaNFromPointCloud(*cloud_in, *cloud_in, indices);
+
+    std::cout<< "start caculate icp" << std::endl;
+
+    tree1->setInputCloud(cloud_in); 
+    tree2->setInputCloud(result); 
+    icp.setInputSource(cloud_in);
+    icp.setInputTarget(result);
+    icp.setMaxCorrespondenceDistance(1500);
+    icp.setTransformationEpsilon(1e-10);
+    icp.setEuclideanFitnessEpsilon(0.001);
+    icp.setMaximumIterations(50); 
+    icp.align( *icp_out);
+
+    std::cout << "has converged:" << icp.hasConverged() << " score: " << icp.getFitnessScore() << std::endl;
+    //std::cout << icp.getFinalTransformation() << std::endl;
+    if (icp.getFitnessScore()<0.00004)
+    {
+    *result += *icp_out;
+
+    cloud_in->header.frame_id = "camera_rgb_optical_frame";
+    icp_out->header.frame_id = "camera_rgb_optical_frame";
+    result->header.frame_id = "camera_rgb_optical_frame";
+    copyPointCloud (*result, *rgba);
+
+    int vec4 = pcl::io::savePCDFile (file_name, *rgba);
+    std::cout << "Success output" << std::endl;//cout
+    std::cout << "=====================" << std::endl << std::endl;//cout
+    }
+    else
+    {
+      std::cout<<"SKIP"<<std::endl;
+      std::cout << "=====================" << std::endl << std::endl;//cout
+    }
+  }
+}
 
 int   main (int argc, char** argv)
 {
-    // Initialize ROS
-    std::cout << "START TO TRANSFORM";
-    ros::init (argc, argv, "my_pcl_tutorial");
-    ros::NodeHandle nh;  
-
-    // Create a ROS publisher for the output point cloud
-    tf_pcl_publisher = nh.advertise<PointCloudXYZRGB> ("tf_pcl", 1);
-    tf_ros_publisher = nh.advertise<PointCloudXYZRGB> ("tf_ros", 1);
-    orig_ros_publisher = nh.advertise<PointCloudXYZRGB> ("orig_ros", 1);
-    //shit();
-  PointCloudXYZRGB::Ptr cloud_in (new PointCloudXYZRGB);
-  PointCloudXYZRGB::Ptr cloud_out (new PointCloudXYZRGB);
-
-  // Fill in the CloudIn data
-  cloud_in->width    = 5;
-  cloud_in->height   = 1;
-  cloud_in->is_dense = false;
-  cloud_in->points.resize (cloud_in->width * cloud_in->height);
-  for (size_t i = 0; i < cloud_in->points.size (); ++i)
-  {
-    cloud_in->points[i].r = 0;
-    cloud_in->points[i].g = 255;
-    cloud_in->points[i].b = 0;
-    cloud_in->points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
-    cloud_in->points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
-    cloud_in->points[i].z = 1024 * rand () / (RAND_MAX + 1.0f);
-  }
-    std::cout << "Saved " << cloud_in->points.size () << " data points to input:"
-        << std::endl;
-    for (size_t i = 0; i < cloud_in->points.size (); ++i) std::cout << "    " <<
-        cloud_in->points[i].x << " " << cloud_in->points[i].y << " " <<
-        cloud_in->points[i].z << std::endl;
-    *cloud_out = *cloud_in;
-    std::cout << "size:" << cloud_out->points.size() << std::endl;
-    for (size_t i = 0; i < cloud_in->points.size (); ++i)
-      cloud_out->points[i].x = cloud_in->points[i].x + 0.7f;
-    std::cout << "Transformed " << cloud_in->points.size () << " data points:"
-        << std::endl;
-    for (size_t i = 0; i < cloud_out->points.size (); ++i)
-      std::cout << "    " << cloud_out->points[i].x << " " <<
-        cloud_out->points[i].y << " " << cloud_out->points[i].z << std::endl;
-    pcl::IterativeClosestPoint<pcl::PointXYZRGB, pcl::PointXYZRGB> icp;
-    icp.setInputSource(cloud_in);
-    icp.setInputTarget(cloud_out);
-    PointCloudXYZRGB::Ptr Final (new PointCloudXYZRGB);   
-    icp.align(*Final);
-    std::cout << "has converged:" << icp.hasConverged() << " score: " <<
-    icp.getFitnessScore() << std::endl;
-    std::cout << icp.getFinalTransformation() << std::endl;
-    cloud_in->header.frame_id = "camera_link";
-    cloud_out->header.frame_id = "camera_link";
-    Final->header.frame_id = "camera_link";
-    while(1)
-    {
-    orig_ros_publisher.publish(cloud_in);
-    tf_pcl_publisher.publish(cloud_out);
-    tf_ros_publisher.publish(Final);
-    ROS_INFO("Success output");//cout
-    }
-    // Spin
-    ros::spin ();
-  }
-
+     // Initialize ROS
+     std::cout << "START TO TRANSFORM";
+     ros::init (argc, argv, "merge");
+     ros::NodeHandle nh;
+     file_name = argv[1];
+     // Create a ROS subscriber for the input point cloud
+     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2> ("/camera/depth_registered/points", 1, cloud_cb);
+     
+     // Create a ROS publisher for the output point cloud
+     input_publisher = nh.advertise<PointCloudXYZRGB> ("cloud_in", 1);
+     output_publisher = nh.advertise<PointCloudXYZRGB> ("cloud_out", 1);
+     icp_publisher = nh.advertise<PointCloudXYZRGB> ("icp_out", 1);
+     result_publisher = nh.advertise<PointCloudXYZRGB> ("result_out", 1);
+     
+     // Spin
+     ros::spin ();
+}

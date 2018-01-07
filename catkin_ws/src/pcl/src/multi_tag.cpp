@@ -25,8 +25,8 @@ void  cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   pcl::PointCloud<pcl::PointXYZRGB> tf_pcl;  
   tf::TransformBroadcaster br;
   tf::StampedTransform trans;
-  lr->waitForTransform("/new_tf", input->header.frame_id, ros::Time::now(), ros::Duration(10.0) );
-  pcl_ros::transformPointCloud("/new_tf", *input, tf_ros, *lr); //tf transform to apriltag frame
+  lr->waitForTransform("/isam_tf", input->header.frame_id, ros::Time::now(), ros::Duration(3.0) );
+  pcl_ros::transformPointCloud("/isam_tf", *input, tf_ros, *lr); //tf transform to apriltag frame
 
   pcl::fromROSMsg (tf_ros, tf_pcl);//convert from PointCloud2 to pcl_rgb
   

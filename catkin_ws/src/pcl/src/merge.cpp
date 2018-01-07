@@ -37,7 +37,7 @@ PointCloudXYZRGB::Ptr cloud_out(new PointCloudXYZRGB);
 PointCloudXYZRGB::Ptr icp_out (new PointCloudXYZRGB); 
 PointCloudXYZRGB::Ptr result (new PointCloudXYZRGB);
 PointCloudXYZRGBA::Ptr rgba (new PointCloudXYZRGBA); 
-
+std::string file_name;
 void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
 {
   // declare icp
@@ -83,7 +83,7 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
   //int vec1 = pcl::io::savePCDFile ("savePCDFile.pcd", *result);
   //int vec2 = pcl::io::savePCDFileASCII ("savePCDFileASCII.pcd", *result);
   //int vec3 = pcl::io::savePLYFile ("savePLYFile.ply", *result);
-  int vec4 = pcl::io::savePCDFile ("rgbaPCD.pcd", *rgba);
+  int vec4 = pcl::io::savePCDFile (file_name, *rgba);
   //int vec5 = pcl::io::savePCDFileASCII ("rgbaASCII.pcd", *rgba);
   ROS_INFO("Success output");//cout
 }
@@ -94,7 +94,7 @@ int   main (int argc, char** argv)
      std::cout << "START TO TRANSFORM";
      ros::init (argc, argv, "merge");
      ros::NodeHandle nh;
-     
+     file_name = argv[1];
      // Create a ROS subscriber for the input point cloud
      ros::Subscriber sub = nh.subscribe<PointCloudXYZRGB> ("/tf_pcl", 1, cloud_cb);
      

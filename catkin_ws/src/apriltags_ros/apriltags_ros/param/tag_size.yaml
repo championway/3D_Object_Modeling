@@ -2,19 +2,19 @@
 -
   id: 0
   frame_id: viewed_tag_0
-  size: 0.04955
+  size: 0.0413
 -
   id: 1
   frame_id: viewed_tag_1
-  size: 0.04955
+  size: 0.0413
 - 
   id: 2
   frame_id: viewed_tag_2
-  size: 0.114
+  size: 0.0413
 - 
   id: 3
   frame_id: viewed_tag_3
-  size: 0.114
+  size: 0.0413
 - 
   id: 4
   frame_id: viewed_tag_4

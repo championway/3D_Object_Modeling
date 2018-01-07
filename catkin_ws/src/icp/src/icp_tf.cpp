@@ -28,7 +28,7 @@ ros::Publisher result_publisher;
 bool first = true;
 
 using namespace pcl;
-
+std::string file_name;
 // declare point cloud
 typedef pcl::PointCloud<pcl::PointXYZRGB> PointCloudXYZRGB;
 typedef pcl::PointCloud<pcl::PointXYZRGBA> PointCloudXYZRGBA;
@@ -82,7 +82,7 @@ void  cloud_cb (const PointCloudXYZRGB::ConstPtr& input_pcl)
     result->header.frame_id = "camera_rgb_optical_frame";
     copyPointCloud (*result, *rgba);
 
-    int vec4 = pcl::io::savePCDFile ("result.pcd", *rgba);
+    int vec4 = pcl::io::savePCDFile (file_name, *rgba);
     std::cout << "Success output" << std::endl;//cout
     std::cout << "=====================" << std::endl << std::endl;//cout
     }
@@ -100,7 +100,7 @@ int   main (int argc, char** argv)
      std::cout << "START TO TRANSFORM";
      ros::init (argc, argv, "merge");
      ros::NodeHandle nh;
-     
+     file_name = argv[1];
      // Create a ROS subscriber for the input point cloud
      ros::Subscriber sub = nh.subscribe<PointCloudXYZRGB> ("/tf_pcl", 1, cloud_cb);
      

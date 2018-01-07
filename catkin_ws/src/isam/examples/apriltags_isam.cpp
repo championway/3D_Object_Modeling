@@ -31,6 +31,24 @@ void toEulerAngle(const geometry_msgs::Quaternion q, double& roll, double& pitch
   yaw = atan2(siny, cosy);
 }
 
+Quaterniond toQuaternion(double pitch, double roll, double yaw)
+{
+  Quaterniond q;
+        // Abbreviations for the various angular functions
+  double cy = cos(yaw * 0.5);
+  double sy = sin(yaw * 0.5);
+  double cr = cos(roll * 0.5);
+  double sr = sin(roll * 0.5);
+  double cp = cos(pitch * 0.5);
+  double sp = sin(pitch * 0.5);
+
+  q.w() = cy * cr * cp + sy * sr * sp;
+  q.x() = cy * sr * cp - sy * cr * sp;
+  q.y() = cy * cr * sp + sy * sr * cp;
+  q.z() = sy * cr * cp - cy * sr * sp;
+  return q;
+}
+
 void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
 {
   int tag_length = input->detections.size();
@@ -50,7 +68,7 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
       toEulerAngle(input->detections[i].pose.pose.orientation, r, p, y);
       if (input->detections[i].id == 0)
         {tag0.set(input->detections[i].pose.pose.position.x, input->detections[i].pose.pose.position.y, input->detections[i].pose.pose.position.z, r, p, y);
-        std::cout<< input->detections[i].pose.pose.position.x << ", " << input->detections[i].pose.pose.position.y << ", " << input->detections[i].pose.pose.position.z << ", " << r << ", " << p << ", " <<  y<< std::endl;}
+        std::cout<< input->detections[i].pose.pose.position.x << ", " << input->detections[i].pose.pose.position.y << ", " << input->detections[i].pose.pose.position.z << ", " << input->detections[i].pose.pose.orientation.x << ", " << input->detections[i].pose.pose.orientation.y << ", " <<  input->detections[i].pose.pose.orientation.z << ", " << input->detections[i].pose.pose.orientation.w << std::endl;}
       if (input->detections[i].id == 1)
         {tag1.set(input->detections[i].pose.pose.position.x, input->detections[i].pose.pose.position.y, input->detections[i].pose.pose.position.z, r, p, y);}
       //std::cout<< input->detections[i].pose.pose.position.x << std::endl << input->detections[i].pose.pose.position.y << std::endl << input->detections[i].pose.pose.position.z << std::endl << r << std::endl << p << std::endl <<  y<< std::endl;
@@ -77,8 +95,8 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     Pose3d_Pose3d_Factor* camera_tag1 = new Pose3d_Pose3d_Factor(pose_nodes[2], pose_nodes[1], tag1, noise2);
     slam.add_factor(camera_tag1);
     //=================================================
-    Pose3d fixed(-0.166, 0.248, 0, 0, 0, 0);
-    Pose3d_Pose3d_Factor* fixex_factor = new Pose3d_Pose3d_Factor(pose_nodes[2], pose_nodes[1], fixed, noise3);
+    Pose3d fixed(0, 0.1895, 0, 0, 0, 0);
+    Pose3d_Pose3d_Factor* fixex_factor = new Pose3d_Pose3d_Factor(pose_nodes[1], pose_nodes[0], fixed, noise2);
     slam.add_factor(fixex_factor);
     //=================================================
 
@@ -89,20 +107,23 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     slam.batch_optimization();
 
     // accessing the current estimate of a specific pose
-    cout << pose_nodes[0]-> value() << endl;
+    //cout << pose_nodes[0]-> value() << endl;
     //tf::Transform transform;
     //tf::Quaternion q;
     //transform.setOrigin(tf::Vector3(input->detections[0].pose.pose.position.x, input->detections[0].pose.pose.position.y, input->detections[0].pose.pose.position.z));
     //q.setRPY(input->detections[0].pose.pose.orientation.x, input->detections[0].pose.pose.orientation.y, input->detections[0].pose.pose.orientation.z);
+    cout << pose_nodes[0]-> value().x() << ", " << pose_nodes[0]-> value().y() << ", " << pose_nodes[0]-> value().z() << ", ";
     tag_transform = new tf::Stamped<tf::Transform>;
     tag_pose = new geometry_msgs::PoseStamped;
+    Quaterniond qt = toQuaternion(pose_nodes[0]-> value().pitch(), pose_nodes[0]-> value().roll(), pose_nodes[0]-> value().yaw());
+    cout << qt.x() << ", " << qt.y() << ", " << qt.z() << ", " << qt.w() << endl;
     tag_pose->pose.position.x = pose_nodes[0]-> value().x();
     tag_pose->pose.position.y = pose_nodes[0]-> value().y();
     tag_pose->pose.position.z = pose_nodes[0]-> value().z();
-    tag_pose->pose.orientation.x = pose_nodes[0]-> value().yaw();
-    tag_pose->pose.orientation.y = pose_nodes[0]-> value().pitch();
-    tag_pose->pose.orientation.z = pose_nodes[0]-> value().roll();
-    tag_pose->pose.orientation.w = input->detections[0].pose.pose.orientation.w;
+    tag_pose->pose.orientation.x = qt.z();
+    tag_pose->pose.orientation.y = qt.y();
+    tag_pose->pose.orientation.z = qt.x();
+    tag_pose->pose.orientation.w = qt.w();
     tf::poseStampedMsgToTF(*tag_pose, *tag_transform);
     //transform.setRotation(q);
     br = new tf::TransformBroadcaster();
@@ -110,7 +131,7 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     // printing the complete graph
     //cout << endl << "Full graph:" << endl;
     //slam.write(cout);
-    
+    //cout << qt.w() << " " << input->detections[0].pose.pose.orientation.w << endl;
     //publish to topics
     //tf_ros_publisher.publish(tf_pcl);
     cout << "Success output" << endl << endl;

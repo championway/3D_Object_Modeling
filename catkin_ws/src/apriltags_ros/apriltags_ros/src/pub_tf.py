@@ -19,7 +19,7 @@ def apriltag_callback(data):
 		if id == 0:
 			br.sendTransform((0.0, 0.0, 0.0),(0.0, 0.0, 0.0, 1.0),rospy.Time.now(),"/new_tf","/viewed_tag_0")
 		elif id == 1:
-			br.sendTransform((-0.166, 0.248, 0.0),(0.0, 0.0, 0.0, 1.0),rospy.Time.now(),"/new_tf","/viewed_tag_1")
+			br.sendTransform((0, 0.1895, 0.0),(0.0, 0.0, 0.0, 1.0),rospy.Time.now(),"/new_tf","/viewed_tag_1")
 		#print id
 
 if __name__=='__main__':
