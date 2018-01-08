@@ -59,7 +59,7 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     Slam slam;  // instance of the main class that manages and optimizes the pose graph
     vector<Pose3d_Node*> pose_nodes;  // locally remember poses
     Pose3d tag0, tag1;
-    Noise noise3 = Information(100. * eye(7));
+    Noise noise3 = Information(1000. * eye(7));
     Noise noise2 = Information(10. * eye(7));
 
     for(int i = 0; i < tag_length; i++)
@@ -95,8 +95,8 @@ void tag_cb(const apriltags_ros::AprilTagDetectionArray::ConstPtr& input)
     Pose3d_Pose3d_Factor* camera_tag1 = new Pose3d_Pose3d_Factor(pose_nodes[2], pose_nodes[1], tag1, noise2);
     slam.add_factor(camera_tag1);
     //=================================================
-    Pose3d fixed(0, 0.1895, 0, 0, 0, 0);
-    Pose3d_Pose3d_Factor* fixex_factor = new Pose3d_Pose3d_Factor(pose_nodes[1], pose_nodes[0], fixed, noise2);
+    Pose3d fixed(0.1895, 0, 0, 0, 0, 0);
+    Pose3d_Pose3d_Factor* fixex_factor = new Pose3d_Pose3d_Factor(pose_nodes[0], pose_nodes[1], fixed, noise3);
     slam.add_factor(fixex_factor);
     //=================================================
 
