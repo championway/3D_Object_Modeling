@@ -49,3 +49,5 @@ $ rosrun pcd create_pcd input:=[pcl_topic] _prefix:=[file_name]
 ```
 $ pcl_viewer [PCD_file_name]
 ```
+## Video
+https://www.youtube.com/watch?v=xTneIZJZ8fE&t=15s
